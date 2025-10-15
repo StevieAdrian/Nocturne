@@ -1,35 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect } from "react";
+import { useSystemStore } from "./store";
+import { processManager } from "./core/kernel/processManager";
+import { eventBus } from "./core/kernel/eventBus";
+import { vfs } from "./core/vfs/vfs";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { booted, boot, bootLog, log } = useSystemStore();
+
+  useEffect(() => {
+    if (booted) {
+      // tes subscribe ke event proses, to be removed
+      eventBus.subscribe("process:spawn", (i) =>
+        log(`Process started: ${i.name} (PID ${i.pid})`)
+      );
+      eventBus.subscribe("process:kill", (i) =>
+        log(`Process stopped: ${i.name}`)
+      );
+    }
+  }, [booted]);
+
+  // tes simulasi task manager
+  const handleStartApp = () => {
+    const proc = processManager.spawn("Terminal");
+    setTimeout(() => processManager.kill(proc.pid), 3000);
+  };
+
+  // tes file system nya work, kek cocmponentdidmount file system nya lah
+  const handleVfsTest = () => {
+    const files = vfs.ls("/home");
+    console.log("Files in /home:", files);
+
+    const content = vfs.cat("/home/readme.txt");
+    console.log("readme.txt:", content);
+
+    vfs.write("/home/newfile.txt", "Hello world nocturne");
+    console.log("After write:", vfs.ls("/home"));
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ fontFamily: "monospace", padding: 20 }}>
+      <h1>Nocturne OS</h1>
+      {!booted ? (
+        <button onClick={boot}>Boot System</button>
+      ) : (
+        <>
+          <p>System booted successfully.</p>
+          <button onClick={handleStartApp}>Spawn Process</button>
+          <div style={{ background: "#111", color: "green", padding: 10, marginTop: 10 }}>
+            {bootLog.map((line, i) => (
+              <div key={i}>{line}</div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <button onClick={handleVfsTest}>Test VFS</button>
+    </div>
+    
+  );
 }
 
-export default App
+export default App;
