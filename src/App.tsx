@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSystemStore } from "./store";
 import { eventBus } from "./core/kernel/eventBus";
 import WindowManager from "./views/windowManager";
+import Taskbar from "./views/taskbar";
 
 function App() {
   const { booted, boot, log } = useSystemStore();
@@ -25,8 +26,8 @@ function App() {
         <button onClick={boot}>Boot System</button>
       ) : (
         <>
-          <p>System booted successfully.</p>
           <WindowManager />
+          <Taskbar />
         </>
       )}
     </div>
