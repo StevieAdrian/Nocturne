@@ -1,24 +1,34 @@
-import { useSystemStore } from "../store";
+import { useProcessStore } from "../store/processStore";
 import Terminal from "../apps/terminal/Terminal";
+import Notes from "../apps/notes/Notes";
 
 export default function WindowManager() {
-    const { booted } = useSystemStore();
+    const { processes, killApp } = useProcessStore();
 
-    if (!booted) return null;
-
-    // tes dummy
-    const runningApps = [{ pid: 1, name: "Terminal", component: <Terminal /> }];
+    const renderApp = (name: string) => {
+        switch (name) {
+        case "Terminal":
+            return <Terminal />;
+        case "Notes":
+            return <Notes />;
+        default:
+            return <div>Unknown app: {name}</div>;
+        }
+    };
 
     return (
-        <div style={{ position: "absolute", inset: 0, backgroundColor: "#1a1a1a", color: "white", overflow: "hidden" }}>
-            {runningApps.map((app) => (
-                <div key={app.pid} style={{ position: "absolute", top: 100, left: 100, width: 600, height: 400, backgroundColor: "#222", border: "1px solid #333", borderRadius: 6, boxShadow: "0 0 10px #0008", padding: 10 }}>
-                    <div style={{ fontWeight: "bold", marginBottom: 8 }}>
-                        {app.name} — PID {app.pid}
+        <>
+            {processes.map((proc, index) => (
+                <div key={proc.pid} style={{ position: "absolute", top: 80 + index * 40, left: 100 + index * 40, width: 600, height: 400, backgroundColor: "#222", border: "1px solid #333", borderRadius: 6, color: "#fff", padding: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, borderBottom: "1px solid #444", }} >
+                        <span>
+                            {proc.name} — PID {proc.pid}
+                        </span>
+                        <button onClick={() => killApp(proc.pid)}>X</button>
                     </div>
-                    {app.component}
+                    {renderApp(proc.name)}
                 </div>
             ))}
-        </div>
+        </>
     );
 }
