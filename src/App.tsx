@@ -8,15 +8,19 @@ function App() {
   const { booted, boot, log } = useSystemStore();
 
   useEffect(() => {
-    if (booted) {
-      // tes subscribe ke event proses, to be removed
-      eventBus.subscribe("process:spawn", (i) =>
-        log(`Process started: ${i.name} (PID ${i.pid})`)
-      );
-      eventBus.subscribe("process:kill", (i) =>
-        log(`Process stopped: ${i.name}`)
-      );
-    }
+    if (!booted) return;
+  
+    const unsubSpawn = eventBus.subscribe("process:spawn", (i) =>
+      log(`Process started: ${i.name} (PID ${i.pid})`)
+    );
+    const unsubKill = eventBus.subscribe("process:kill", (i) =>
+      log(`Process stopped: ${i.name}`)
+    );
+  
+    return () => {
+      unsubSpawn();
+      unsubKill();
+    };
   }, [booted]);
 
   return (
