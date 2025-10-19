@@ -1,23 +1,28 @@
-type EventHandler = (payload?: any) => void;
-
+type Callback<T = any> = (payload: T) => void;
+type EventMap = Record<string, Callback[]>;
 class EventBus {
-    private topics: Map<string, EventHandler[]> = new Map();
+    private listeners: EventMap = {};
 
-    subscribe(topic: string, handler: EventHandler) {
-        if (!this.topics.has(topic)) this.topics.set(topic, []);
-        this.topics.get(topic)!.push(handler);
+    subscribe<T = any>(event: string, callback: Callback<T>) {
+        if (!this.listeners[event]) this.listeners[event] = [];
+        this.listeners[event].push(callback);
+
+        return () => {
+            this.listeners[event] = this.listeners[event].filter((cb) => cb !== callback);
+        };
     }
 
-    publish(topic: string, payload?: any) {
-        const handlers = this.topics.get(topic);
-        if (!handlers) return;
-        handlers.forEach((h) => h(payload));
+    publish<T = any>(event: string, data: T) {
+        this.listeners[event]?.forEach((cb) => cb(data));
     }
 
-    unsubscribe(topic: string, handler: EventHandler) {
-        const handlers = this.topics.get(topic);
-        if (!handlers) return;
-        this.topics.set(topic, handlers.filter((h) => h !== handler));
+    unsubscribe<T = any>(event: string, callback: Callback<T>) {
+        if (!this.listeners[event]) return;
+        this.listeners[event] = this.listeners[event].filter((cb) => cb !== callback);
+    }
+
+    clearAll() {
+        this.listeners = {};
     }
 }
 
